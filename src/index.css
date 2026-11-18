@@ -11,6 +11,7 @@
 
 html, body, #root {
   height: 100%;
+  /* standalone(홈 화면) 실행 시 노치·홈 인디케이터 영역 배경이 끊기지 않도록 */
   margin: 0;
   overflow: hidden;
   overscroll-behavior: none;
@@ -29,3 +30,8 @@ button { touch-action: manipulation; -webkit-user-select: none; user-select: non
 .anim-prev { animation: slide-in-prev .22s ease-out; }
 .anim-pop { animation: pop-in .2s ease-out; }
 .anim-fade { animation: fade-in .18s ease-out; }
+
+/* 홈 화면(standalone) 실행 시: 바깥 배경도 앱 배경색으로 통일 */
+@media (display-mode: standalone) {
+  html, body, #root { background: #F8F9FA; }
+}

@@ -135,7 +135,7 @@ function EdgeZones({ onPrev, onNext, canPrev, canNext }) {
 
 function Modal({ title, desc, yes, no, onYes, onNo }) {
   return (
-    <div className="anim-fade absolute inset-0 z-50 flex items-center justify-center bg-black/40 px-8" onClick={onNo}>
+    <div className="anim-fade absolute inset-0 z-50 flex items-center justify-center bg-black/40 px-8 pb-[env(safe-area-inset-bottom)] pt-[env(safe-area-inset-top)]" onClick={onNo}>
       <div className="anim-pop w-full rounded-2xl bg-white p-6 text-center shadow-xl" onClick={(e) => e.stopPropagation()} role="dialog" aria-modal="true">
         <p className="text-[17px] font-bold text-ink">{title}</p>
         {desc && <p className="mt-2 text-sm leading-relaxed text-ink/70">{desc}</p>}
@@ -184,7 +184,7 @@ function ImageZoom({ src, onClose }) {
   if (!src) return null
   return (
     <div className="anim-fade absolute inset-0 z-50 flex flex-col bg-black/90">
-      <div className="flex shrink-0 justify-end p-3">
+      <div className="flex shrink-0 justify-end p-3 pt-[calc(env(safe-area-inset-top)+12px)]">
         <button onClick={onClose} className="h-9 rounded-lg bg-white/15 px-4 text-[13px] font-bold text-white active:bg-white/25">닫기</button>
       </div>
       <div className="min-h-0 flex-1 overflow-auto overscroll-contain p-3" onTouchStart={(e) => e.stopPropagation()} onTouchEnd={(e) => e.stopPropagation()}>
@@ -199,11 +199,11 @@ function ImageZoom({ src, onClose }) {
 function StartScreen({ onStart }) {
   return (
     <Frame>
-      <header className="px-6 pt-10">
+      <header className="px-6 pt-[calc(env(safe-area-inset-top)+40px)]">
         <Brand className="text-[26px] text-ink" />
         <p className="mt-1 text-[13px] font-medium text-ink/55">ISTQB CTFL v4.0 Foundation Level</p>
       </header>
-      <main className="flex flex-1 flex-col items-center justify-center px-6">
+      <main className="flex flex-1 flex-col items-center justify-center px-6 pb-[env(safe-area-inset-bottom)]">
         <button
           onClick={onStart}
           className="anim-pop flex h-44 w-44 flex-col items-center justify-center rounded-full bg-alti text-white shadow-[0_14px_30px_rgba(230,0,45,0.35)] transition active:scale-95 active:bg-alti-dark"
@@ -278,7 +278,7 @@ function ExamScreen({ questions, answers, setAnswer, deadline, onSubmit }) {
 
   return (
     <Frame>
-      <header className="relative z-20 shrink-0 bg-white px-4 pb-3 pt-[max(12px,env(safe-area-inset-top))] shadow-[0_1px_0_rgba(0,0,0,0.05)]">
+      <header className="relative z-20 shrink-0 bg-white px-4 pb-3 pt-[calc(env(safe-area-inset-top)+12px)] shadow-[0_1px_0_rgba(0,0,0,0.05)]">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-3">
             <div className={`flex items-center gap-1.5 rounded-full px-3 py-1.5 ${urgent ? 'bg-alti text-white' : 'bg-alti/10 text-alti'}`}>
@@ -367,7 +367,7 @@ function ResultScreen({ correct, total, onReview, onHome }) {
 
   return (
     <Frame>
-      <header className="px-6 pt-8">
+      <header className="px-6 pt-[calc(env(safe-area-inset-top)+32px)]">
         <Brand className="text-[18px] text-ink" />
         <p className="mt-0.5 text-[13px] font-medium text-ink/55">시험 결과</p>
       </header>
@@ -461,7 +461,7 @@ function ReviewScreen({ items, onExit }) {
 
   return (
     <Frame>
-      <header className="relative z-20 flex shrink-0 items-center justify-between bg-white px-4 pb-3 pt-[max(12px,env(safe-area-inset-top))] shadow-[0_1px_0_rgba(0,0,0,0.05)]">
+      <header className="relative z-20 flex shrink-0 items-center justify-between bg-white px-4 pb-3 pt-[calc(env(safe-area-inset-top)+12px)] shadow-[0_1px_0_rgba(0,0,0,0.05)]">
         <div>
           <p className="text-[16px] font-bold tabular-nums text-ink">
             오답 <span className="text-alti">{idx + 1}</span> / {total}

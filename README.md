@@ -20,3 +20,12 @@ npm run build    # dist/ 정적 빌드
 scripts/extract/ — parse_samples.py(샘플 A~D 파싱), parse_dump.py(덤프 파싱),
 normalize.py(용어 정리), dump_decisions.py(덤프 검토 결과·해설), build_final.py(병합)
 (pdfplumber 필요, PDF 경로는 스크립트 상단에서 수정)
+
+## PWA (홈 화면 앱)
+- vite-plugin-pwa(registerType: 'autoUpdate') — Vercel에 재배포하면 서비스 워커가 새 버전을 받아 자동 교체합니다.
+  (iOS 홈 화면 앱은 앱을 한 번 완전히 닫았다 다시 열면 최신 버전이 표시됩니다)
+- 매니페스트: name "KSTQB 모의시험 Alti", short_name "KSTQB Alti", standalone, portrait, theme #FFFFFF, background #F8F9FA
+- 아이콘: assets/icon-source.png → `python3 scripts/generate-icons.py`로 public/에 icon-192.png, icon-512.png, apple-touch-icon.png(180), favicon-32.png 생성
+- iOS: index.html의 apple-mobile-web-app-* 메타태그, viewport-fit=cover, 화면별 env(safe-area-inset-top/bottom) 패딩 적용
+- 확인: `npm run build && npm run preview` 후 개발자도구 Application 탭에서 Manifest/Service Worker 확인
+- iPhone 설치: Safari로 배포 주소 접속 → 공유 → '홈 화면에 추가'
