@@ -1,0 +1,31 @@
+@import "tailwindcss";
+
+@theme {
+  --color-alti: #E6002D;
+  --color-alti-dark: #7A001E;
+  --color-ink: #4A5560;
+  --color-canvas: #F8F9FA;
+  --color-ok: #16A34A;
+  --font-sans: -apple-system, BlinkMacSystemFont, "Apple SD Gothic Neo", "Pretendard", "Noto Sans KR", "Malgun Gothic", system-ui, sans-serif;
+}
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  overflow: hidden;
+  overscroll-behavior: none;
+  background: #E9ECEF;
+  -webkit-tap-highlight-color: transparent;
+  -webkit-text-size-adjust: 100%;
+}
+
+button { touch-action: manipulation; -webkit-user-select: none; user-select: none; }
+
+@keyframes slide-in-next { from { opacity: 0; transform: translateX(18px); } to { opacity: 1; transform: none; } }
+@keyframes slide-in-prev { from { opacity: 0; transform: translateX(-18px); } to { opacity: 1; transform: none; } }
+@keyframes pop-in { from { opacity: 0; transform: scale(.94); } to { opacity: 1; transform: none; } }
+@keyframes fade-in { from { opacity: 0; } to { opacity: 1; } }
+.anim-next { animation: slide-in-next .22s ease-out; }
+.anim-prev { animation: slide-in-prev .22s ease-out; }
+.anim-pop { animation: pop-in .2s ease-out; }
+.anim-fade { animation: fade-in .18s ease-out; }
