@@ -21,6 +21,29 @@ function fmtTime(sec) {
   return `${String(Math.floor(s / 60)).padStart(2, '0')}:${String(s % 60).padStart(2, '0')}`
 }
 
+const AUTO_NEXT_MS = 250
+
+// 응답 완료 여부: 정답 개수(복수 정답이면 2개 등)만큼 모두 선택해야 완료
+const isDone = (q, picked) => Array.isArray(picked) && picked.length === q.answer.length
+
+// 보기 선택 결과 계산 — 단일: 교체 / 복수(k개): 토글, k개 초과 시 가장 먼저 고른 것 해제
+function nextSelection(cur, v, k) {
+  const sel = Array.isArray(cur) ? cur : []
+  if (k === 1) return [v]
+  if (sel.includes(v)) return sel.filter((x) => x !== v)
+  return [...sel, v].slice(-k)
+}
+
+// 스마트 점프: 현재 이후 → (없으면) 처음부터 순환하여 가장 가까운 미답변 문항. 없으면 -1
+function findNextUnanswered(questions, answers, from) {
+  const n = questions.length
+  for (let step = 1; step < n; step++) {
+    const i = (from + step) % n
+    if (!isDone(questions[i], answers[i])) return i
+  }
+  return -1
+}
+
 const isCorrect = (q, picked) =>
   Array.isArray(picked) && picked.length === q.answer.length && q.answer.every((a) => picked.includes(a))
 
@@ -238,8 +261,18 @@ function ExamScreen({ questions, answers, setAnswer, deadline, onSubmit }) {
   const [left, setLeft] = useState(() => Math.round((deadline - Date.now()) / 1000))
   const [confirm, setConfirm] = useState(false)
   const [zoom, setZoom] = useState(null)
+  const [doneBanner, setDoneBanner] = useState(false)
   const scrollRef = useRef(null)
   const submitted = useRef(false)
+  const autoTimer = useRef(null) // 자동 이동 타이머
+  const locked = useRef(false) // 자동 이동 대기(250ms) 중 중복 입력 잠금
+
+  const cancelAuto = useCallback(() => {
+    clearTimeout(autoTimer.current)
+    autoTimer.current = null
+    locked.current = false
+  }, [])
+  useEffect(() => cancelAuto, [cancelAuto]) // 언마운트 시 타이머 정리
 
   const submit = useCallback(() => {
     if (submitted.current) return
@@ -262,18 +295,46 @@ function ExamScreen({ questions, answers, setAnswer, deadline, onSubmit }) {
   const go = useCallback(
     (n) => {
       if (n < 0 || n >= total) return
+      cancelAuto() // 수동 이동 시 대기 중인 자동 이동 취소 → 두 문제가 한꺼번에 넘어가지 않음
       setDir(n > idx ? 'next' : 'prev')
       setIdx(n)
       if (scrollRef.current) scrollRef.current.scrollTop = 0
     },
-    [idx, total],
+    [idx, total, cancelAuto],
   )
+  // 수동 이동(하단 < | >, 좌우 터치·스와이프, 방향키)은 순차 이동 유지
   const prev = useCallback(() => go(idx - 1), [go, idx])
   const next = useCallback(() => go(idx + 1), [go, idx])
   const swipe = useSwipeNav(prev, next, !confirm && !zoom)
 
   const q = questions[idx]
-  const answered = answers.filter((a) => a !== null).length
+
+  // 보기 선택 → 필요한 개수를 모두 고르면 250ms 후 다음 미답변 문항으로 자동 이동
+  const choose = (i) => {
+    if (locked.current) return
+    const k = q.answer.length
+    const sel = nextSelection(answers[idx], i, k)
+    setAnswer(idx, sel)
+    if (sel.length !== k) return // 복수 정답 문항: 아직 덜 고름
+    const updated = answers.slice()
+    updated[idx] = sel
+    const target = findNextUnanswered(questions, updated, idx)
+    if (target === -1) {
+      setDoneBanner(true) // 전 문항 응답 완료 → 이동하지 않고 제출 안내
+      return
+    }
+    locked.current = true
+    autoTimer.current = setTimeout(() => {
+      autoTimer.current = null
+      locked.current = false
+      setDir(target > idx ? 'next' : 'prev')
+      setIdx(target)
+      if (scrollRef.current) scrollRef.current.scrollTop = 0
+    }, AUTO_NEXT_MS)
+  }
+
+  const answered = questions.reduce((n, qq, i) => n + (isDone(qq, answers[i]) ? 1 : 0), 0)
+  const allDone = answered === total
   const urgent = left <= 300
 
   return (
@@ -316,7 +377,7 @@ function ExamScreen({ questions, answers, setAnswer, deadline, onSubmit }) {
                 return (
                   <li key={i}>
                     <button
-                      onClick={() => setAnswer(idx, i, q.answer.length)}
+                      onClick={() => choose(i)}
                       aria-pressed={sel}
                       className={`flex w-full items-start gap-3 rounded-xl border-2 px-3.5 py-3 text-left transition-colors ${
                         sel ? 'border-alti bg-alti/[0.06]' : 'border-transparent bg-white shadow-sm ring-1 ring-black/5 active:bg-black/[0.03]'
@@ -338,6 +399,20 @@ function ExamScreen({ questions, answers, setAnswer, deadline, onSubmit }) {
           </div>
         </div>
       </main>
+
+      {allDone && doneBanner && (
+        <div className="anim-pop absolute inset-x-4 bottom-[calc(env(safe-area-inset-bottom)+76px)] z-30 rounded-2xl bg-ink p-4 text-white shadow-xl" role="status">
+          <p className="text-[15px] font-bold">모든 문항을 풀었습니다. 제출하시겠습니까?</p>
+          <div className="mt-3 flex gap-2">
+            <button onClick={() => setDoneBanner(false)} className="h-10 flex-1 rounded-xl bg-white/15 text-[14px] font-bold active:bg-white/25">
+              계속 검토
+            </button>
+            <button onClick={submit} className="h-10 flex-1 rounded-xl bg-alti text-[14px] font-bold active:bg-alti-dark">
+              제출하기
+            </button>
+          </div>
+        </div>
+      )}
 
       <BottomNav onPrev={prev} onNext={next} canPrev={idx > 0} canNext={idx < total - 1} />
 
@@ -564,15 +639,11 @@ export default function App() {
     setScreen('START')
   }
 
-  // 단일 정답: 선택 교체 / 복수 정답(k개): 토글, k개 초과 시 가장 먼저 고른 것 해제
-  const setAnswer = useCallback((i, v, k = 1) => {
+  // ExamScreen에서 계산한 선택 배열을 그대로 저장 (빈 배열은 미응답 null)
+  const setAnswer = useCallback((i, sel) => {
     setAnswers((prev) => {
       const next = prev.slice()
-      const cur = Array.isArray(next[i]) ? next[i] : []
-      if (k === 1) next[i] = [v]
-      else if (cur.includes(v)) next[i] = cur.filter((x) => x !== v)
-      else next[i] = [...cur, v].slice(-k)
-      if (next[i].length === 0) next[i] = null
+      next[i] = sel && sel.length ? sel : null
       return next
     })
   }, [])
