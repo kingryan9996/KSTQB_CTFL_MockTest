@@ -127,11 +127,18 @@ export default function SyllabusScreen({ onBack }) {
   const keys = useMemo(() => chapters.flatMap((c) => c.sections.map((s) => `${c.id}-${s.id}`)), [chapters])
   const [open, setOpen] = useState(() => new Set([`${CHAPTERS[0].id}-${CHAPTERS[0].sections[0].id}`]))
   const scrollRef = useRef(null)
+  const tabsRef = useRef(null)
   const allOpen = keys.every((k) => open.has(k))
 
   const pick = (id, el) => {
     setFilter(id)
-    el?.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' }) // 선택한 탭을 가운데로
+    // 선택한 탭을 가운데로 — 0 ~ 최대 스크롤 범위로 제한해 [전체]·마지막 탭이 잘리지 않게 함
+    const nav = tabsRef.current
+    if (nav && el) {
+      const target = el.offsetLeft - (nav.clientWidth - el.offsetWidth) / 2
+      const max = nav.scrollWidth - nav.clientWidth
+      nav.scrollTo({ left: Math.max(0, Math.min(target, max)), behavior: 'smooth' })
+    }
     const first = id === 0 ? CHAPTERS[0] : CHAPTERS.find((c) => c.id === id)
     setOpen(new Set([`${first.id}-${first.sections[0].id}`])) // 장 전환 시 첫 절만 펼침
     if (scrollRef.current) scrollRef.current.scrollTop = 0
@@ -162,7 +169,11 @@ export default function SyllabusScreen({ onBack }) {
               CTFL v4.0 핵심 <span className="text-alti">실러버스</span>
             </h1>
           </div>
-          <nav className="no-scrollbar flex gap-2 overflow-x-auto px-4 pb-3" aria-label="챕터 선택">
+          <nav
+            ref={tabsRef}
+            className="no-scrollbar relative flex items-center justify-start gap-2 overflow-x-auto border-t border-black/5 px-4 py-3"
+            aria-label="챕터 선택"
+          >
             {tabs.map((t) => {
               const on = filter === t.id
               return (
@@ -170,14 +181,16 @@ export default function SyllabusScreen({ onBack }) {
                   key={t.id}
                   onClick={(e) => pick(t.id, e.currentTarget)}
                   aria-pressed={on}
-                  className={`h-9 shrink-0 rounded-full px-3.5 text-[13px] font-bold transition-colors ${
-                    on ? 'bg-alti text-white shadow-[0_4px_10px_rgba(230,0,45,0.25)]' : 'bg-white text-ink ring-1 ring-ink/25 active:bg-black/5'
+                  className={`h-9 shrink-0 whitespace-nowrap rounded-full border px-3.5 text-[13px] font-bold transition-colors ${
+                    on ? 'border-alti bg-alti text-white' : 'border-ink/25 bg-white text-ink active:bg-black/5'
                   }`}
                 >
                   {t.tab}
                 </button>
               )
             })}
+            {/* iOS Safari는 스크롤 컨테이너의 오른쪽 패딩을 무시하므로 끝 여백용 스페이서 */}
+            <span aria-hidden="true" className="w-px shrink-0" />
           </nav>
         </header>
 
