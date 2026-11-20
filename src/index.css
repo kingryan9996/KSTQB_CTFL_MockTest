@@ -35,3 +35,7 @@ button { touch-action: manipulation; -webkit-user-select: none; user-select: non
 @media (display-mode: standalone) {
   html, body, #root { background: #F8F9FA; }
 }
+
+/* 가로 스크롤 탭: 스크롤바 숨김 */
+.no-scrollbar { scrollbar-width: none; -webkit-overflow-scrolling: touch; }
+.no-scrollbar::-webkit-scrollbar { display: none; }

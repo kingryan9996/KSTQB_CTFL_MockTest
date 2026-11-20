@@ -1,5 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react'
 import QUESTIONS from './data/questions.json'
+import SyllabusScreen from './components/SyllabusScreen.jsx'
 
 const EXAM_SIZE = 40
 const EXAM_SECONDS = 60 * 60
@@ -219,12 +220,24 @@ function ImageZoom({ src, onClose }) {
 }
 
 /* ───────── START ───────── */
-function StartScreen({ onStart }) {
+function StartScreen({ onStart, onSyllabus }) {
   return (
     <Frame>
-      <header className="px-6 pt-[calc(env(safe-area-inset-top)+40px)]">
-        <Brand className="text-[26px] text-ink" />
-        <p className="mt-1 text-[13px] font-medium text-ink/55">ISTQB CTFL v4.0 Foundation Level</p>
+      <header className="flex items-start justify-between gap-3 px-6 pt-[calc(env(safe-area-inset-top)+40px)]">
+        <div className="min-w-0">
+          <Brand className="text-[26px] text-ink" />
+          <p className="mt-1 text-[13px] font-medium text-ink/55">ISTQB CTFL v4.0 Foundation Level</p>
+        </div>
+        <button
+          onClick={onSyllabus}
+          className="mt-0.5 flex h-9 shrink-0 items-center gap-1.5 rounded-full border border-ink/30 bg-white px-3 text-[13px] font-bold text-ink active:bg-black/5"
+        >
+          <svg viewBox="0 0 24 24" className="h-4 w-4" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20V3H6.5A2.5 2.5 0 0 0 4 5.5v14z" />
+            <path d="M4 19.5A2.5 2.5 0 0 0 6.5 22H20v-5" />
+          </svg>
+          실러버스
+        </button>
       </header>
       <main className="flex flex-1 flex-col items-center justify-center px-6 pb-[env(safe-area-inset-bottom)]">
         <button
@@ -667,5 +680,6 @@ export default function App() {
     return <ResultScreen correct={result.correct} total={exam.questions.length} onReview={() => setScreen('REVIEW')} onHome={reset} />
   if (screen === 'REVIEW' && result && result.wrong.length)
     return <ReviewScreen items={result.wrong} onExit={reset} />
-  return <StartScreen onStart={start} />
+  if (screen === 'SYLLABUS') return <SyllabusScreen onBack={() => setScreen('START')} />
+  return <StartScreen onStart={start} onSyllabus={() => setScreen('SYLLABUS')} />
 }
